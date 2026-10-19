@@ -4,15 +4,34 @@ Agent Skills that turn a coding assistant (Claude Code, Cursor, Codex, …) into
 
 The skill encodes Authlete's protocol contract and the per-language SDK map, and your coding agent writes an idiomatic server from it on demand.
 
-> **Status: Preview.** The main skill (`authlete-oauth-server`) generates a reference server that **builds and runs and serves live Authlete discovery**. Full protocol conformance (the complete `authorize → token → userinfo` round-trip) is the next milestone. Don't rely on this for production yet.
+> **Status: Preview.** These skills generate a working OAuth 2.0 / OpenID Connect server on Authlete —
+> the core `authorize → token → userinfo` flow plus optional capabilities — each with its own conformance
+> checklist. Not recommended for production yet.
 
 ## Skills
 
-| Skill | What it does |
-|---|---|
-| **`authlete-oauth-server`** | Generates a base server: the OAuth/OIDC endpoints + built-in basic login and consent, with an in-config identity source. |
+Start with the base skill, then add only the capabilities you need. Each add-on adds one endpoint (or
+layers onto existing ones) — never a rewrite. Every skill ships a `conformance/` checklist.
 
-Add-on skills (externalized login/consent, PAR, CIBA, device flow, introspection, registration, grant management, federation) are planned — each adds one endpoint or swaps one step, never a rewrite.
+| Skill | What it adds |
+|---|---|
+| **`authlete-oauth-server`** | The base server: OAuth/OIDC endpoints + built-in basic login and consent, with an in-config identity source. |
+| **`authlete-par`** | Pushed Authorization Requests (RFC 9126). |
+| **`authlete-dcr`** | Dynamic Client Registration + management (RFC 7591 / 7592). |
+| **`authlete-dpop`** | DPoP sender-constrained tokens (RFC 9449). Layers onto token/PAR/userinfo. |
+| **`authlete-userinfo`** | The OIDC UserInfo endpoint (Core §5.3). |
+| **`authlete-introspection`** | Token introspection (RFC 7662). |
+| **`authlete-revocation`** | Token revocation (RFC 7009). |
+
+Still planned: externalized login/consent, CIBA, device flow, grant management, federation.
+
+## Conformance
+
+Generating a server is only half the promise — the other half is **proving it's correct**. Every skill
+ships a plain-language `conformance/spec.md` (what the capability must do, with the RFC section and
+copy-paste commands next to each item), and [`conformance/`](conformance/) holds the shared tools —
+notably the swappable **login drivers** that let the same protocol checks run against any server. See
+[conformance/README.md](conformance/README.md).
 
 ## Supported languages
 
@@ -21,7 +40,7 @@ The hard rule: **use the official Authlete 3.0 SDK, or generation stops.** No ra
 | Language | Official SDK | In the SDK map | Verified |
 |---|---|---|---|
 | **Go** | `authlete-go-sdk` | ✅ | ✅ builds + runs + live discovery |
-| **TypeScript** | `@authlete/typescript-sdk` | ✅ | ✅ builds (regen evals) |
+| **TypeScript** | `@authlete/typescript-sdk` | ✅ | ✅ builds + runs + live discovery |
 | **Ruby** | `authlete_ruby_sdk` (Ruby ≥ 3.2) | ✅ | ✅ builds + runs + live discovery |
 | **C#** | coming | — | on SDK release |
 
@@ -72,9 +91,10 @@ Endpoints: `/oauth/authorize`, `/oauth/authorize/decision`, `/oauth/token`, `/oa
 
 ## Roadmap
 
-1. Conformance harness — prove the full flow against a live Authlete, per language.
-2. Ruby eval to parity with Go; C# on SDK release.
-3. Add-on skills (external login/consent, advanced endpoints).
+1. A one-command conformance runner (`check <base-url>`) that executes every skill's checklist and prints pass/fail.
+2. Re-prove the token-dependent checks on a freshly generated server (using the base login driver).
+3. More add-on skills: externalized login/consent, CIBA, device flow, grant management, federation.
+4. Ruby/Go to parity across all add-ons; C# on SDK release.
 
 ## License
 

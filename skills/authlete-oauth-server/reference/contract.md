@@ -28,7 +28,16 @@ module** with a stable input/output; the base implements them inline, and a late
 - **consent step** — in: requested scopes/claims (+ any already-granted). out: the granted scopes (or denial).
   Base: render a simple consent form. `external-consent` replaces this module with redirect-to-external-UI + callback.
 
-**Identity source** — one small module: a credential check + claim lookup. Base: an in-config user list.
+**Identity source** — one small module: a credential check + claim lookup. Base: an in-config user list. **Seed it with one
+documented dev user so the built-in login is reproducible and automatable** — a conformance harness must be able to drive
+login without reading the generated code. Pin, don't invent:
+
+- Seed user: username `demo`, password `demo-password`, subject `demo-user`, claims `{ name: "Demo User",
+  email: "demo@example.com", email_verified: true }`. (Add more only if asked.)
+- Login/consent form contract (fixed, not an example): `GET /oauth/authorize` renders one combined login+consent page
+  (200 on INTERACTION) that `POST`s to `/oauth/authorize/decision` with fields `username`, `password`, the Authlete
+  `ticket` (hidden), and `decision` = `approve` | `deny`. Do not rename these fields.
+
 Both the login step and `userinfo` read from it. (This is the single narrow interface the beacon proves
 is the real axis of change — implement it as a few functions, not a framework.)
 
