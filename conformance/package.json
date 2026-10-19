@@ -1,0 +1,13 @@
+{
+  "name": "authlete-skills-conformance",
+  "private": true,
+  "type": "module",
+  "description": "Shared conformance tools (login drivers + proof minters) for the authlete-skills checklists.",
+  "scripts": {
+    "setup-browser": "playwright install chromium"
+  },
+  "dependencies": {
+    "jose": "^5.9.6",
+    "playwright": "^1.49.0"
+  }
+}

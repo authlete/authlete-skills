@@ -12,10 +12,10 @@ server needs no JWK/JWT library; add one (`lestrrat-go/jwx`, current) only in a 
 **TypeScript (`@authlete/typescript-sdk`):** client `new Authlete({ bearer, serverURL })` from the root export —
 `serverURL` required or it defaults to the US cluster. Each call takes `{ serviceId, <name>Request: {…} }` (the
 payload is wrapped in a named field). `authorization.processRequest` / `authorization.issue` / `authorization.fail`;
-`token.process`; `userinfo.process` / `userinfo.issue`; `service.getConfiguration`; `jwkSetEndpoint.serviceJwksGetApi`.
-(Note: authorization uses `processRequest`; token/userinfo use `process`.) `jwkSetEndpoint.serviceJwksGetApi` returns the
-service JWK Set — serve it as-is. The base server needs no JWK/JWT library; add one (`jose`) only in a later skill that
-signs or verifies JWTs locally.
+`token.process`; `userinfo.process` / `userinfo.issue`; `service.getConfiguration`; service JWKS: `service.get()` returns
+the service carrying a `.jwks` string (same shape as Go/Ruby). In `@authlete/typescript-sdk` v2.x there is NO `jwkSetEndpoint`
+accessor — serve that string as-is, or `{"keys":[]}`. (Note: authorization uses `processRequest`; token/userinfo use `process`.)
+The base server needs no JWK/JWT library; add one (`jose`) only in a later skill that signs or verifies JWTs locally.
 
 **Ruby (`authlete_ruby_sdk`, requires Ruby >= 3.2):** client `::Authlete::Client.new(bearer: token, server_url: AUTHLETE_BASE_URL)`
 — `server_url` required; do NOT append `/api` (the SDK adds it). `service_id` is the service's `api_key` value, passed per call

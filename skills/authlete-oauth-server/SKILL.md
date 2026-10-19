@@ -18,7 +18,7 @@ Read [reference/contract.md](reference/contract.md) and [reference/sdk-notes.md]
 1. Add the official Authlete SDK (none for this language → stop) and a router. Get an empty build
    green *before* any handler.
 2. Generate the core from reference/contract.md: read config → one Authlete client → register the core routes → listen.
-3. Build green, then run conformance against a live Authlete. **Build-green ≠ correct.**
+3. Build green, then run the checks in [conformance/spec.md](conformance/spec.md) against a live Authlete. **Build-green ≠ correct.**
 
 ## Rules
 - Use the official SDK, with the exact per-language method names in reference/sdk-notes.md.
