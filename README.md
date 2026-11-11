@@ -22,6 +22,7 @@ layers onto existing ones) — never a rewrite. Every skill ships a `conformance
 | **`authlete-userinfo`** | The OIDC UserInfo endpoint (Core §5.3). |
 | **`authlete-introspection`** | Token introspection (RFC 7662). |
 | **`authlete-revocation`** | Token revocation (RFC 7009). |
+| **`authlete-cimd`** | Client ID Metadata Documents: clients such as MCP clients sign in with a URL as `client_id`. Service configuration only, no new endpoint. |
 
 Still planned: externalized login/consent, CIBA, device flow, grant management, federation.
 
