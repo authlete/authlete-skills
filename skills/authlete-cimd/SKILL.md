@@ -94,9 +94,9 @@ body resets the rest, including the service name.
 |---|---|---|
 | `clientIdMetadataDocumentSupported` | `true` | The switch. Off by default. Discovery then advertises `client_id_metadata_document_supported` |
 | `cimdAllowlistEnabled`, `cimdAllowlist` | `true`, the allowed client URLs | Without it, anyone can register by hosting a document |
-| `supportedTokenAuthMethods` | add `NONE` | CIMD clients are public. Without it: `[A505306]` |
+| `supportedTokenAuthMethods` | add `NONE`, and `PRIVATE_KEY_JWT` if any client uses it | CIMD clients cannot use shared secrets: most send no client authentication, some sign with `private_key_jwt` (their document then has `jwks` or `jwks_uri`). Without a matching method: `[A505306]` |
 | `supportedGrantTypes` | add every grant type the allowed clients list | One unsupported value rejects the document: `[A505307]`. VS Code lists `DEVICE_CODE` |
-| `pkceRequired`, `pkceS256Required` | `true` | Public clients have no secret, so PKCE protects the code |
+| `pkceRequired`, `pkceS256Required` | `true` | Most CIMD clients have no client credentials, so PKCE protects the code |
 | `accessTokenDuration` | greater than `0` | The default `0` issues tokens that are already expired |
 | `issuer`, `authorizationEndpoint`, `tokenEndpoint` | your server's public URLs | Discovery has `null` endpoints until they are set |
 | `httpAliasProhibited` | `true` | A client ID alias equal to a URL would shadow CIMD |
@@ -122,8 +122,9 @@ forwards client credentials. Go to Verify.
 - A handler looks clients up in a local table first. A CIMD client exists only in Authlete.
 - A handler branches on `resultCode`, rewrites `responseContent`, or misses an action
   (`INTERACTION`, `NO_INTERACTION`, `LOCATION`, `FORM`, `BAD_REQUEST`, `INTERNAL_SERVER_ERROR`).
-- `/token` rejects requests without client credentials. CIMD clients send `client_id` and
-  `code_verifier`, no secret.
+- `/token` rejects requests without a client secret. CIMD clients never have one: they send
+  `client_id` and `code_verifier`, plus a `client_assertion` if they use `private_key_jwt`. Pass
+  the form body through and let Authlete check it.
 - Discovery is built by hand and lacks `client_id_metadata_document_supported`.
 
 While there, check the server follows Authlete's model: `NO_INTERACTION` (for example `prompt=none`)
@@ -145,8 +146,9 @@ checks each token.
    `{ "resource": "<MCP URL>", "authorization_servers": ["<issuer>"], "scopes_supported": ["mcp:tools"], "bearer_methods_supported": ["header"] }`.
    `authorization_servers` must hold the service's `issuer`.
 2. **401 without a valid token**, with
-   `WWW-Authenticate: Bearer resource_metadata="<metadata URL>", scope="mcp:tools"`. This header is
-   how a client finds your authorization server.
+   `WWW-Authenticate: Bearer resource_metadata="<metadata URL>", scope="mcp:tools"`. The MCP spec
+   requires at least one discovery mechanism: this header or the well-known URI in item 1. Do both:
+   clients use the header when present, and fall back to the well-known URI.
 3. **Introspect every request** with Authlete's `auth/introspection`, passing `token`,
    `scopes: ["mcp:tools"]` and `resources: ["<MCP URL>"]`. `OK` → serve (`subject` is the user,
    `metadataDocumentLocation` is the client's URL); `UNAUTHORIZED` → 401 with the header;
@@ -181,7 +183,7 @@ against it; enforcing PKCE. Authlete does all of it inside the calls you already
 |---|---|---|
 | `A505301` | Authlete could not fetch the document | Make it publicly reachable over `https` |
 | `A505308` | The document or URL failed validation, for example a URL over 200 characters | Fix the document or shorten the URL |
-| `A505306` | The service does not support the document's `token_endpoint_auth_method` | Add `NONE` |
+| `A505306` | The service does not support the document's `token_endpoint_auth_method` | Add `NONE`, or `PRIVATE_KEY_JWT` for clients that sign |
 | `A505307` | The service does not support a declared value, usually a grant type | Add it, or drop it with a metadata policy |
 | `A011317` | The `redirect_uri` is not in the document | Use a listed URI; for portless `localhost`, set `loopbackRedirectionUriVariable` |
 | `A050305` | The code does not exist or was used | Restart the flow |

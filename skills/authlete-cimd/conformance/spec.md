@@ -17,7 +17,7 @@ Specs: CIMD is `draft-ietf-oauth-client-id-metadata-document`; the other checks 
 | # | Must do | How to check | Spec |
 |---|---|---|---|
 | CIMD-01 | Advertise CIMD | discovery has `client_id_metadata_document_supported: true` | CIMD, RFC 8414 |
-| CIMD-02 | Advertise public clients and PKCE | discovery's `token_endpoint_auth_methods_supported` includes `none`, and `code_challenge_methods_supported` includes `S256` | RFC 8414, RFC 7636 |
+| CIMD-02 | Advertise the auth methods CIMD clients use, and PKCE | discovery's `token_endpoint_auth_methods_supported` includes `none` (and `private_key_jwt` if allowed clients sign), and `code_challenge_methods_supported` includes `S256` | RFC 8414, RFC 7636 |
 
 ## Accept a URL client
 
@@ -43,12 +43,12 @@ Specs: CIMD is `draft-ietf-oauth-client-id-metadata-document`; the other checks 
 | # | Must do | How to check | Spec |
 |---|---|---|---|
 | MCP-01 | Publish protected resource metadata | `GET /.well-known/oauth-protected-resource` (and `/<path>` for a path endpoint) → JSON whose `authorization_servers` holds the service's `issuer` | RFC 9728 |
-| MCP-02 | Point unauthenticated clients at it | a request to the MCP endpoint with no token → **401** with `WWW-Authenticate: Bearer resource_metadata="…"` | RFC 9728 §5.1 |
+| MCP-02 | Reject a missing token, and point at the metadata | a request to the MCP endpoint with no token → **401**. Recommended: a `WWW-Authenticate: Bearer resource_metadata="…"` header. The MCP spec requires this header or MCP-01's well-known URI; MCP-01 is required here, so the header is advisory | RFC 9728 §5.1, MCP |
 | MCP-03 | Accept a valid token | the CIMD-05 token (with scope `mcp:tools`) → the request succeeds | MCP |
 | MCP-04 | Reject a token for another server | a token whose resource is another URL → **401** or **403** (`[A286303]`) | RFC 8707, RFC 9700 §2.3 |
 | MCP-05 | Reject a made-up token | `Authorization: Bearer nonsense` → **401** (`[A057302]`) | RFC 6750 |
 
-**Pass =** every check behaves as described. CIMD-07 to CIMD-11 are enforced by Authlete; your
+**Pass =** every check behaves as described; the `WWW-Authenticate` header in MCP-02 is advisory. CIMD-07 to CIMD-11 are enforced by Authlete; your
 server's job is to surface the rejection faithfully. The Authlete result codes in brackets are for
 diagnosis: servers return `responseContent`, not the code.
 
